@@ -24,6 +24,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IClassService, ClassService>();
 
+builder.Services.AddScoped<IHoldRepository, HoldRepository>();
+builder.Services.AddScoped<IHoldService, HoldService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline

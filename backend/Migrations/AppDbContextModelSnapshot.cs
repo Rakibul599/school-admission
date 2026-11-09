@@ -37,9 +37,6 @@ namespace backend.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("SchoolClassId")
-                        .HasColumnType("text");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -50,7 +47,7 @@ namespace backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SchoolClassId");
+                    b.HasIndex("ClassId");
 
                     b.ToTable("Holds");
                 });
@@ -79,7 +76,9 @@ namespace backend.Migrations
                 {
                     b.HasOne("backend.Models.SchoolClass", "SchoolClass")
                         .WithMany("Holds")
-                        .HasForeignKey("SchoolClassId");
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("SchoolClass");
                 });
