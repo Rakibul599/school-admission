@@ -1,8 +1,28 @@
+
+using backend.Repositories;
+using backend.Services;
+using Microsoft.EntityFrameworkCore;
+using backend.Data;
+
+
 var builder = WebApplication.CreateBuilder(args);
+// Connection string read
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") 
+                      ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+//  DbContext Register 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Add controller support
+builder.Services.AddControllers();
 
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IClassRepository, ClassRepository>();
+builder.Services.AddScoped<IClassService, ClassService>();
 
 var app = builder.Build();
 
@@ -33,6 +53,9 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+// Map controller routes
+app.MapControllers();
 
 app.Run();
 
