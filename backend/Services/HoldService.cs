@@ -48,4 +48,107 @@ public class HoldService : IHoldService
             };
         }
     }
+    public async Task<HoldOperationResult> ConfirmHoldAsync(string holdId, string studentId)
+    {
+        if (string.IsNullOrWhiteSpace(studentId) || studentId.Trim().Length != 17 || !studentId.All(char.IsDigit))
+        {
+            return new HoldOperationResult
+            {
+                Success = false,
+                ErrorCode = "INVALID_STUDENT_ID",
+                ErrorMessage = "A valid 17-digit birth registration number is required."
+            };
+        }
+
+        try
+        {
+            return await _holdRepository.ConfirmHoldAsync(holdId, studentId.Trim());
+        }
+        catch (Exception ex)
+        {
+            return new HoldOperationResult
+            {
+                Success = false,
+                ErrorCode = "INTERNAL_ERROR",
+                ErrorMessage = ex.Message
+            };
+        }
+    }
+
+    public async Task<HoldDetailResponseDto?> GetHoldByIdAsync(string holdId)
+    {
+        var hold = await _holdRepository.GetHoldByIdAsync(holdId);
+        if (hold == null) return null;
+
+        var status = hold.Status;
+        if (status == "HELD" && hold.ExpiresAt <= DateTime.UtcNow)
+        {
+            status = "EXPIRED";
+        }
+
+        return new HoldDetailResponseDto
+        {
+            HoldId = hold.Id,
+            ClassId = hold.ClassId,
+            Status = status,
+            ExpiresAt = hold.ExpiresAt
+        };
+    }
+    public async Task<HoldOperationResult> CancelHoldAsync(string holdId, string studentId)
+    {
+        // Validate 17-digit student birth registration number
+        if (string.IsNullOrWhiteSpace(studentId) || studentId.Trim().Length != 17 || !studentId.All(char.IsDigit))
+        {
+            return new HoldOperationResult
+            {
+                Success = false,
+                ErrorCode = "INVALID_STUDENT_ID",
+                ErrorMessage = "A valid 17-digit birth registration number is required."
+            };
+        }
+
+        try
+        {
+            return await _holdRepository.CancelHoldAsync(holdId, studentId.Trim());
+        }
+        catch (Exception ex)
+        {
+            return new HoldOperationResult
+            {
+                Success = false,
+                ErrorCode = "INTERNAL_ERROR",
+                ErrorMessage = ex.Message
+            };
+        }
+    }
+
+    public async Task<HoldDetailResponseDto?> GetMyHoldAsync(string studentId)
+    {
+        // Validate 17-digit birth registration number
+        if (string.IsNullOrWhiteSpace(studentId) || studentId.Trim().Length != 17 || !studentId.All(char.IsDigit))
+        {
+            return null;
+        }
+
+        var hold = await _holdRepository.GetLatestHoldByStudentIdAsync(studentId.Trim());
+        if (hold == null)
+        {
+            return null;
+        }
+
+        var status = hold.Status;
+        // Dynamically mark as EXPIRED if past expiration timestamp and still marked HELD
+        if (status == "HELD" && hold.ExpiresAt <= DateTime.UtcNow)
+        {
+            status = "EXPIRED";
+        }
+
+        return new HoldDetailResponseDto
+        {
+            HoldId = hold.Id,
+            ClassId = hold.ClassId,
+            Status = status,
+            ExpiresAt = hold.ExpiresAt
+        };
+    }
 }
