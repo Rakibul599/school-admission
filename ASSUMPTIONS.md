@@ -1,7 +1,9 @@
-# Assumptions
+# Assumptions & Architectural Decisions
 
-- **Seat Concurrency:** Used PostgreSQL row locking (`SELECT ... FOR UPDATE`) in transactions instead of in-memory locks, ensuring strict capacity checks even across multiple backend instances.
-- **Hold Expiration:** Holds expire after `HOLD_DURATION_SECONDS` (default: 600s). Expired seats are immediately treated as available in calculations, and a lightweight background service periodically marks status as `EXPIRED`.
-- **Student Restriction:** A student (`X-Student-Id`) can hold or confirm at most one seat per class at any given time.
-- **Idempotency:** Re-confirming an already confirmed hold returns success without incrementing confirmed seat counts again.
-- **State Persistence:** `studentId` and active hold tracking are stored in the browser's `localStorage` to persist across page refreshes.
+- **Multi-Process Concurrency & Bonus:** Ensured strict capacity checks across multiple backend instances/processes by enforcing transactional row-level locks (`SELECT ... FOR UPDATE`) directly in PostgreSQL. Application-level locks were avoided to guarantee that `heldSeats + confirmedSeats <= totalSeats` is always respected, regardless of how many instances run concurrently.
+- **Seat Availability & Hold Expiration:** A hold is strictly valid for `HOLD_DURATION_SECONDS` (default: 600s). In queries, seats with expired holds are immediately calculated as available without waiting for background jobs. A background worker periodically cleans up records and marks them `EXPIRED` in the database.
+- **Single Active Hold per Class:** A student (`X-Student-Id`) is restricted to having at most one active (`HELD`) or `CONFIRMED` admission per class at any given time.
+- **Idempotent Confirmations:** Confirming an already confirmed hold returns a successful 200 response without double-counting confirmed seats.
+- **Hold Cancellation:** Releasing or cancelling a hold immediately frees up the seat and transitions the hold status to `CANCELLED`.
+- **Time Standard:** All timestamps (`expiresAt`) are handled and stored in UTC (ISO 8601) to prevent timezone drift between client and server.
+- **Client State Persistence:** The 17-digit birth registration number is stored in browser `localStorage` to ensure the student's active applications remain visible across page reloads and browser restarts.
