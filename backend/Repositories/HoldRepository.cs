@@ -279,4 +279,12 @@ public class HoldRepository : IHoldRepository
             .OrderByDescending(h => h.CreatedAt)
             .FirstOrDefaultAsync();
     }
+
+    public async Task<int> MarkExpiredHoldsAsync(DateTime now)
+{
+    // Directly batch update all expired holds in the database without loading them into memory
+    return await _context.Holds
+        .Where(h => h.Status == "HELD" && h.ExpiresAt <= now)
+        .ExecuteUpdateAsync(setters => setters.SetProperty(h => h.Status, "EXPIRED"));
+}
 }

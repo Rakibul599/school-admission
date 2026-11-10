@@ -6,6 +6,13 @@ using backend.Data;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+var port = Environment.GetEnvironmentVariable("PORT") 
+           ?? builder.Configuration["PORT"] 
+           ?? "5239";
+
+builder.WebHost.UseUrls($"http://localhost:{port}");
+
 // Connection string read
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") 
                       ?? builder.Configuration.GetConnectionString("DefaultConnection");
@@ -26,6 +33,8 @@ builder.Services.AddScoped<IClassService, ClassService>();
 
 builder.Services.AddScoped<IHoldRepository, HoldRepository>();
 builder.Services.AddScoped<IHoldService, HoldService>();
+
+builder.Services.AddHostedService<HoldCleanupWorker>();
 
 var app = builder.Build();
 

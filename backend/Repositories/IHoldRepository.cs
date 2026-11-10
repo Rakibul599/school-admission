@@ -11,6 +11,7 @@ public interface IHoldRepository
     Task<Hold?> GetHoldByIdAsync(string holdId);
     Task<HoldOperationResult> CancelHoldAsync(string holdId, string studentId);
     Task<Hold?> GetLatestHoldByStudentIdAsync(string studentId);
+    Task<int> MarkExpiredHoldsAsync(DateTime now);
 }
 
 public class HoldSeatResult
