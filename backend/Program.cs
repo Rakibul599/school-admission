@@ -9,7 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 var port = Environment.GetEnvironmentVariable("PORT")
            ?? builder.Configuration["PORT"]
-           ?? "5239";
+           ?? "8080";
+
+// Register default CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.SetIsOriginAllowed(_ => true)
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 // builder.WebHost.UseUrls($"http://localhost:{port}");
 builder.WebHost.UseUrls($"http://*:{port}");
@@ -45,7 +56,7 @@ var app = builder.Build();
 //     app.UseSwagger();
 //     app.UseSwaggerUI();
 // }
-
+app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
 
