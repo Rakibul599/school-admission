@@ -7,14 +7,15 @@ using backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = Environment.GetEnvironmentVariable("PORT") 
-           ?? builder.Configuration["PORT"] 
+var port = Environment.GetEnvironmentVariable("PORT")
+           ?? builder.Configuration["PORT"]
            ?? "5239";
 
-builder.WebHost.UseUrls($"http://localhost:{port}");
+// builder.WebHost.UseUrls($"http://localhost:{port}");
+builder.WebHost.UseUrls($"http://*:{port}");
 
 // Connection string read
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") 
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
                       ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 //  DbContext Register 
@@ -39,13 +40,16 @@ builder.Services.AddHostedService<HoldCleanupWorker>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
 
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// app.UseHttpsRedirection();
 
 var summaries = new[]
 {
@@ -68,6 +72,12 @@ app.MapGet("/weatherforecast", () =>
 
 // Map controller routes
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
 
