@@ -47,15 +47,10 @@ docker compose up -d
 
 ### Option 1: Run via .NET SDK (Host Machine)
 ```bash
-cd backend.Test
+cd backend.Tests
 dotnet test
 ```
 
-### Option 2: Run inside the Backend Container
-If you do not have the .NET SDK installed locally:
-```bash
-docker compose exec backend dotnet test
-```
 
 The test suite includes validation for:
 1. Class creation and seat calculation accuracy.
